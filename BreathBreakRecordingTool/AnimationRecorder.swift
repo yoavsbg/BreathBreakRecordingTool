@@ -17,7 +17,7 @@ class AnimationRecorder {
         let fileName = "BreathingAnimation_\(exercise.name.replacingOccurrences(of: " ", with: "_"))_\(timestamp).mov"
         let outputURL = tempDir.appendingPathComponent(fileName)
         
-        print("📁 Saving to temp: \(outputURL.path)")
+        print("ðŸ“ Saving to temp: \(outputURL.path)")
         
         // Remove existing file if it exists
         try? FileManager.default.removeItem(at: outputURL)
@@ -41,14 +41,14 @@ class AnimationRecorder {
     ) {
         // Setup video writer
         guard let videoWriter = try? AVAssetWriter(outputURL: outputURL, fileType: .mov) else {
-            print("❌ Failed to create AVAssetWriter")
+            print("âŒ Failed to create AVAssetWriter")
             print("Output URL: \(outputURL.path)")
             completion(false, nil)
             return
         }
         
-        print("✅ AVAssetWriter created successfully")
-        print("📹 Output: \(outputURL.lastPathComponent)")
+        print("âœ… AVAssetWriter created successfully")
+        print("ðŸ“¹ Output: \(outputURL.lastPathComponent)")
         
         let videoSettings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
@@ -79,15 +79,15 @@ class AnimationRecorder {
         let frameDuration = CMTime(value: 1, timescale: CMTimeScale(fps))
         let totalFrames = Int(duration * Double(fps))
         
-        print("📝 Starting video writing session...")
-        print("   Resolution: \(Int(size.width))×\(Int(size.height))")
+        print("ðŸ“ Starting video writing session...")
+        print("   Resolution: \(Int(size.width))Ã—\(Int(size.height))")
         print("   Duration: \(duration) seconds")
         print("   FPS: \(fps)")
         print("   Total frames: \(totalFrames)")
         
         // Start writing
         guard videoWriter.startWriting() else {
-            print("❌ Failed to start writing")
+            print("âŒ Failed to start writing")
             if let error = videoWriter.error {
                 print("   Error: \(error.localizedDescription)")
             }
@@ -96,7 +96,7 @@ class AnimationRecorder {
             return
         }
         
-        print("✅ Writing started successfully")
+        print("âœ… Writing started successfully")
         
         videoWriter.startSession(atSourceTime: .zero)
         
@@ -136,10 +136,10 @@ class AnimationRecorder {
             videoWriter.finishWriting {
                 DispatchQueue.main.async {
                     if videoWriter.status == .completed {
-                        print("✅ Video recording completed successfully!")
+                        print("âœ… Video recording completed successfully!")
                         completion(true, outputURL)
                     } else {
-                        print("❌ Video recording failed with status: \(videoWriter.status.rawValue)")
+                        print("âŒ Video recording failed with status: \(videoWriter.status.rawValue)")
                         if let error = videoWriter.error {
                             print("Error: \(error.localizedDescription)")
                         }
@@ -171,7 +171,7 @@ class AnimationRecorder {
             
             // Render to CGImage
             guard let cgImage = renderer.cgImage else {
-                print("⚠️ Failed to render frame at time \(time)")
+                print("âš ï¸ Failed to render frame at time \(time)")
                 return
             }
             
@@ -192,7 +192,7 @@ class AnimationRecorder {
             )
             
             guard status == kCVReturnSuccess, let buffer = pixelBuffer else {
-                print("⚠️ Failed to create pixel buffer")
+                print("âš ï¸ Failed to create pixel buffer")
                 return
             }
             
@@ -210,7 +210,7 @@ class AnimationRecorder {
                 space: CGColorSpaceCreateDeviceRGB(),
                 bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue
             ) else {
-                print("⚠️ Failed to create context")
+                print("âš ï¸ Failed to create context")
                 return
             }
             
@@ -281,6 +281,19 @@ struct BreathingAnimationSnapshot: View {
     }
     
     var body: some View {
+        let minDimension = min(size.width, size.height)
+        let scale = minDimension / 400 // Base scale on 400pt reference
+        let circleSize = 300 * scale
+        let lineWidth = 6 * scale
+        let glowRadius = 25 * scale
+        let blurRadius = 20 * scale
+        let movingCircleSize = 80 * scale
+        let movingCircleSmallSize = 40 * scale
+        let movingCircleOffset = circleSize / 2
+        let indicatorSize = 50 * scale
+        let indicatorRadius = (circleSize / 2) - (indicatorSize / 2) - 5
+        let fontSize = 24 * scale
+        
         ZStack {
             // Gradient background
             LinearGradient(
@@ -307,10 +320,10 @@ struct BreathingAnimationSnapshot: View {
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
-                            lineWidth: 6
+                            lineWidth: lineWidth
                         )
-                        .shadow(color: currentPhase.color.opacity(0.6), radius: 25)
-                        .frame(width: 300, height: 300)
+                        .shadow(color: currentPhase.color.opacity(0.6), radius: glowRadius)
+                        .frame(width: circleSize, height: circleSize)
                     
                     // Soft inner glow
                     Circle()
@@ -321,71 +334,67 @@ struct BreathingAnimationSnapshot: View {
                                     Color.clear
                                 ]),
                                 center: .center,
-                                startRadius: 50,
-                                endRadius: 180
+                                startRadius: 50 * scale,
+                                endRadius: 180 * scale
                             )
                         )
-                        .frame(width: 300, height: 300)
-                        .blur(radius: 20)
+                        .frame(width: circleSize, height: circleSize)
+                        .blur(radius: blurRadius)
                     
                     // Moving glowing circle
                     ZStack {
                         Circle()
                             .fill(currentPhase.color.opacity(0.3))
-                            .blur(radius: 20)
-                            .frame(width: 80, height: 80)
-                            .offset(x: 150)
+                            .blur(radius: blurRadius)
+                            .frame(width: movingCircleSize, height: movingCircleSize)
+                            .offset(x: movingCircleOffset)
                             .rotationEffect(.degrees(rotation))
                         
                         Circle()
                             .fill(.white)
-                            .frame(width: 40, height: 40)
-                            .shadow(color: currentPhase.color.opacity(0.8), radius: 20)
-                            .offset(x: 150)
+                            .frame(width: movingCircleSmallSize, height: movingCircleSmallSize)
+                            .shadow(color: currentPhase.color.opacity(0.8), radius: blurRadius)
+                            .offset(x: movingCircleOffset)
                             .rotationEffect(.degrees(rotation))
                     }
                     
                     // Phase indicator circles
-                    GeometryReader { _ in
+                    ZStack {
                         let pattern = patternComponents
                         
                         let inhaleStartAngle = 270.0
                         let holdStartAngle = 270.0 + (pattern.inhale / totalCycleDuration) * 360
                         let exhaleStartAngle = 270.0 + ((pattern.inhale + pattern.hold) / totalCycleDuration) * 360
                         
+                        let radius = circleSize / 2
+                        
                         Group {
                             Circle()
                                 .fill(currentPhase == .inhale ? BreathingPhase.inhale.color : Color.white.opacity(0.15))
-                                .frame(width: 50, height: 50)
-                                .position(
-                                    x: 150 + 145 * cos(inhaleStartAngle * .pi / 180),
-                                    y: 150 + 145 * sin(inhaleStartAngle * .pi / 180)
-                                )
+                                .frame(width: indicatorSize, height: indicatorSize)
+                                .offset(x: radius)
+                                .rotationEffect(.degrees(inhaleStartAngle))
                             
                             Circle()
                                 .fill(currentPhase == .hold ? BreathingPhase.hold.color : Color.white.opacity(0.15))
-                                .frame(width: 50, height: 50)
-                                .position(
-                                    x: 150 + 145 * cos(holdStartAngle * .pi / 180),
-                                    y: 150 + 145 * sin(holdStartAngle * .pi / 180)
-                                )
+                                .frame(width: indicatorSize, height: indicatorSize)
+                                .offset(x: radius)
+                                .rotationEffect(.degrees(holdStartAngle))
                             
                             Circle()
                                 .fill(currentPhase == .exhale ? BreathingPhase.exhale.color : Color.white.opacity(0.15))
-                                .frame(width: 50, height: 50)
-                                .position(
-                                    x: 150 + 145 * cos(exhaleStartAngle * .pi / 180),
-                                    y: 150 + 145 * sin(exhaleStartAngle * .pi / 180)
-                                )
+                                .frame(width: indicatorSize, height: indicatorSize)
+                                .offset(x: radius)
+                                .rotationEffect(.degrees(exhaleStartAngle))
                         }
                     }
-                    .frame(width: 300, height: 300)
+                    .frame(width: circleSize, height: circleSize)
                     
                     // Center text
                     Text(currentPhase.text)
-                        .font(.system(size: 24, weight: .semibold, design: .rounded))
+                        .font(.system(size: fontSize, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white)
-                        .shadow(color: currentPhase.color.opacity(0.7), radius: 10)
+                        .shadow(color: currentPhase.color.opacity(0.7), radius: 10 * scale)
                 }
                 
                 Spacer()
