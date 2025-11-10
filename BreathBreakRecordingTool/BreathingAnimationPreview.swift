@@ -3,6 +3,7 @@ import SwiftUI
 struct BreathingAnimationPreview: View {
     let exercise: BreathingExercise
     let exportSize: ContentView.ExportSize
+    let theme: BreathingTheme
     
     @State private var rotation: Double = 0
     @State private var startTime: Date = Date()
@@ -37,11 +38,11 @@ struct BreathingAnimationPreview: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Gradient background
+                // Gradient background with theme colors
                 LinearGradient(
                     gradient: Gradient(colors: [
-                        Color(red: 0.10, green: 0.12, blue: 0.25),
-                        Color(red: 0.02, green: 0.02, blue: 0.08)
+                        theme.backgroundGradientStart,
+                        theme.backgroundGradientEnd
                     ]),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -52,7 +53,7 @@ struct BreathingAnimationPreview: View {
                     .overlay(
                         TimelineView(.animation(minimumInterval: 0.016)) { timeline in
                             Color.clear
-                                .onChange(of: timeline.date) { _, _ in
+                                .onChange(of: timeline.date) { _ in
                                     let elapsed = Date().timeIntervalSince(startTime)
                                     let cycleTime = elapsed.truncatingRemainder(dividingBy: totalCycleDuration)
                                     
@@ -116,15 +117,15 @@ struct BreathingAnimationPreview: View {
                             .strokeBorder(
                                 LinearGradient(
                                     gradient: Gradient(colors: [
-                                        phase.color.opacity(0.7),
-                                        Color.purple.opacity(0.4)
+                                        theme.glowColor1.opacity(0.7),
+                                        theme.glowColor2.opacity(0.4)
                                     ]),
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ),
                                 lineWidth: lineWidth
                             )
-                            .shadow(color: phase.color.opacity(0.6), radius: glowRadius)
+                            .shadow(color: theme.glowColor1.opacity(0.6), radius: glowRadius)
                             .frame(width: circleSize, height: circleSize)
                         
                         // Soft inner glow
@@ -132,7 +133,7 @@ struct BreathingAnimationPreview: View {
                             .fill(
                                 RadialGradient(
                                     gradient: Gradient(colors: [
-                                        phase.color.opacity(0.25),
+                                        theme.glowColor1.opacity(0.25),
                                         Color.clear
                                     ]),
                                     center: .center,
@@ -146,7 +147,7 @@ struct BreathingAnimationPreview: View {
                         // Moving glowing circle
                         ZStack {
                             Circle()
-                                .fill(phase.color.opacity(0.3))
+                                .fill(theme.glowColor1.opacity(0.3))
                                 .blur(radius: blurRadius)
                                 .frame(width: movingCircleSize, height: movingCircleSize)
                                 .offset(x: movingCircleOffset)
@@ -155,7 +156,7 @@ struct BreathingAnimationPreview: View {
                             Circle()
                                 .fill(.white)
                                 .frame(width: movingCircleSmallSize, height: movingCircleSmallSize)
-                                .shadow(color: phase.color.opacity(0.8), radius: blurRadius)
+                                .shadow(color: theme.glowColor1.opacity(0.8), radius: blurRadius)
                                 .offset(x: movingCircleOffset)
                                 .rotationEffect(.degrees(rotation))
                         }
@@ -197,7 +198,7 @@ struct BreathingAnimationPreview: View {
                             Text(phase.rawValue)
                                 .font(.system(size: fontSize, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.white)
-                                .shadow(color: phase.color.opacity(0.7), radius: 10 * scale)
+                                .shadow(color: theme.glowColor1.opacity(0.7), radius: 10 * scale)
                         }
                     }
                     

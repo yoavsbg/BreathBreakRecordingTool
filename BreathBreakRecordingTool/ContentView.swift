@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var selectedExercise: BreathingExercise = BreathingExercise.defaultExercises[0]
+    @State private var selectedTheme: BreathingTheme = BreathingTheme.defaultThemes[0]
     @State private var isRecording = false
     @State private var recordingDuration: TimeInterval = 10.0
     @State private var exportSize: ExportSize = .instagram1080
@@ -31,7 +32,11 @@ struct ContentView: View {
                     .font(.headline)
                     .padding(.top)
                 
-                BreathingAnimationPreview(exercise: selectedExercise, exportSize: exportSize)
+                BreathingAnimationPreview(
+                    exercise: selectedExercise,
+                    exportSize: exportSize,
+                    theme: selectedTheme
+                )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.black)
             }
@@ -63,6 +68,24 @@ struct ContentView: View {
                             .pickerStyle(.menu)
                         }
                         
+                        // Theme Selection
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Theme")
+                                .font(.headline)
+                            
+                            Picker("Theme", selection: $selectedTheme) {
+                                ForEach(BreathingTheme.defaultThemes) { theme in
+                                    Text(theme.name).tag(theme)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            
+                            Text(selectedTheme.mood)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .italic()
+                        }
+                        
                         // Export Size
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Export Size")
@@ -75,7 +98,7 @@ struct ContentView: View {
                             }
                             .pickerStyle(.menu)
                             
-                            Text("\(Int(exportSize.resolution.width)) × \(Int(exportSize.resolution.height))")
+                            Text("\(Int(exportSize.resolution.width)) Ã— \(Int(exportSize.resolution.height))")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -115,9 +138,9 @@ struct ContentView: View {
                             Text("Recording Tips")
                                 .font(.headline)
                             
-                            Text("• Video will be saved to temp folder")
-                            Text("• Make sure you have enough disk space")
-                            Text("• Higher resolutions take longer to render")
+                            Text("â€¢ Video will be saved to temp folder")
+                            Text("â€¢ Make sure you have enough disk space")
+                            Text("â€¢ Higher resolutions take longer to render")
                             
                         }
                         .font(.caption)
@@ -172,7 +195,7 @@ struct ContentView: View {
                         }
                         .frame(height: 200)
                         .background(Color.black.opacity(0.05))
-                        .onChange(of: logger.logs.count) { _, _ in
+                        .onChange(of: logger.logs.count) { _ in
                             if let lastLog = logger.logs.last {
                                 withAnimation {
                                     proxy.scrollTo(lastLog.id, anchor: .bottom)
@@ -197,7 +220,8 @@ struct ContentView: View {
         recorder.recordAnimation(
             exercise: selectedExercise,
             duration: recordingDuration,
-            size: exportSize.resolution
+            size: exportSize.resolution,
+            theme: selectedTheme
         ) { success, url in
             isRecording = false
             

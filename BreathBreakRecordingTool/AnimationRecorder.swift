@@ -18,6 +18,7 @@ class AnimationRecorder {
         exercise: BreathingExercise,
         duration: TimeInterval,
         size: CGSize,
+        theme: BreathingTheme,
         completion: @escaping (Bool, URL?) -> Void
     ) {
         // Use temporary directory (always works, no permissions needed)
@@ -27,7 +28,7 @@ class AnimationRecorder {
         let fileName = "BreathingAnimation_\(exercise.name.replacingOccurrences(of: " ", with: "_"))_\(timestamp).mov"
         let outputURL = tempDir.appendingPathComponent(fileName)
         
-        log("📂 Saving to temp: \(outputURL.path)", type: .info)
+        log("ðŸ“‚ Saving to temp: \(outputURL.path)", type: .info)
         
         // Remove existing file if it exists
         try? FileManager.default.removeItem(at: outputURL)
@@ -38,6 +39,7 @@ class AnimationRecorder {
             duration: duration,
             size: size,
             outputURL: outputURL,
+            theme: theme,
             completion: completion
         )
     }
@@ -47,18 +49,19 @@ class AnimationRecorder {
         duration: TimeInterval,
         size: CGSize,
         outputURL: URL,
+        theme: BreathingTheme,
         completion: @escaping (Bool, URL?) -> Void
     ) {
         // Setup video writer
         guard let videoWriter = try? AVAssetWriter(outputURL: outputURL, fileType: .mov) else {
-            log("❌ Failed to create AVAssetWriter", type: .error)
+            log("âŒ Failed to create AVAssetWriter", type: .error)
             log("Output URL: \(outputURL.path)", type: .error)
             completion(false, nil)
             return
         }
         
-        log("✅ AVAssetWriter created successfully", type: .success)
-        log("🎬 Output: \(outputURL.lastPathComponent)", type: .info)
+        log("âœ… AVAssetWriter created successfully", type: .success)
+        log("ðŸŽ¬ Output: \(outputURL.lastPathComponent)", type: .info)
         
         let videoSettings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
@@ -89,15 +92,15 @@ class AnimationRecorder {
         let frameDuration = CMTime(value: 1, timescale: CMTimeScale(fps))
         let totalFrames = Int(duration * Double(fps))
         
-        log("🎬 Starting video writing session...", type: .info)
-        log("   Resolution: \(Int(size.width))×\(Int(size.height))", type: .info)
+        log("ðŸŽ¬ Starting video writing session...", type: .info)
+        log("   Resolution: \(Int(size.width))Ã—\(Int(size.height))", type: .info)
         log("   Duration: \(duration) seconds", type: .info)
         log("   FPS: \(fps)", type: .info)
         log("   Total frames: \(totalFrames)", type: .info)
         
         // Start writing
         guard videoWriter.startWriting() else {
-            log("❌ Failed to start writing", type: .error)
+            log("âŒ Failed to start writing", type: .error)
             if let error = videoWriter.error {
                 log("   Error: \(error.localizedDescription)", type: .error)
             }
@@ -106,7 +109,7 @@ class AnimationRecorder {
             return
         }
         
-        log("✅ Writing started successfully", type: .success)
+        log("âœ… Writing started successfully", type: .success)
         
         videoWriter.startSession(atSourceTime: .zero)
         
@@ -126,7 +129,8 @@ class AnimationRecorder {
                     if let pixelBuffer = self.createPixelBuffer(
                         for: exercise,
                         at: Double(i) / Double(fps),
-                        size: size
+                        size: size,
+                        theme: theme
                     ) {
                         pixelBufferAdaptor.append(pixelBuffer, withPresentationTime: presentationTime)
                     }
@@ -146,10 +150,10 @@ class AnimationRecorder {
             videoWriter.finishWriting {
                 DispatchQueue.main.async {
                     if videoWriter.status == .completed {
-                        self.log("✅ Video recording completed successfully!", type: .success)
+                        self.log("âœ… Video recording completed successfully!", type: .success)
                         completion(true, outputURL)
                     } else {
-                        self.log("❌ Video recording failed with status: \(videoWriter.status.rawValue)", type: .error)
+                        self.log("âŒ Video recording failed with status: \(videoWriter.status.rawValue)", type: .error)
                         if let error = videoWriter.error {
                             self.log("Error: \(error.localizedDescription)", type: .error)
                         }
@@ -163,7 +167,8 @@ class AnimationRecorder {
     private func createPixelBuffer(
         for exercise: BreathingExercise,
         at time: TimeInterval,
-        size: CGSize
+        size: CGSize,
+        theme: BreathingTheme
     ) -> CVPixelBuffer? {
         var resultBuffer: CVPixelBuffer?
         
@@ -172,7 +177,8 @@ class AnimationRecorder {
             let view = BreathingAnimationSnapshot(
                 exercise: exercise,
                 currentTime: time,
-                size: size
+                size: size,
+                theme: theme
             )
             
             // Use ImageRenderer for proper SwiftUI rendering
@@ -236,6 +242,7 @@ struct BreathingAnimationSnapshot: View {
     let exercise: BreathingExercise
     let currentTime: TimeInterval
     let size: CGSize
+    let theme: BreathingTheme
     
     private var patternComponents: (inhale: Double, hold: Double, exhale: Double) {
         let parts = exercise.pattern.split(separator: "-").compactMap { Double($0) }
@@ -301,11 +308,11 @@ struct BreathingAnimationSnapshot: View {
         let fontSize = 24 * scale
         
         ZStack {
-            // Gradient background
+            // Gradient background with theme colors
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color(red: 0.10, green: 0.12, blue: 0.25),
-                    Color(red: 0.02, green: 0.02, blue: 0.08)
+                    theme.backgroundGradientStart,
+                    theme.backgroundGradientEnd
                 ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -315,20 +322,20 @@ struct BreathingAnimationSnapshot: View {
                 Spacer()
                 
                 ZStack {
-                    // Main glowing ring
+                    // Main glowing ring with theme colors
                     Circle()
                         .strokeBorder(
                             LinearGradient(
                                 gradient: Gradient(colors: [
-                                    currentPhase.color.opacity(0.7),
-                                    Color.purple.opacity(0.4)
+                                    theme.glowColor1.opacity(0.7),
+                                    theme.glowColor2.opacity(0.4)
                                 ]),
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
                             lineWidth: lineWidth
                         )
-                        .shadow(color: currentPhase.color.opacity(0.6), radius: glowRadius)
+                        .shadow(color: theme.glowColor1.opacity(0.6), radius: glowRadius)
                         .frame(width: circleSize, height: circleSize)
                     
                     // Soft inner glow
@@ -336,7 +343,7 @@ struct BreathingAnimationSnapshot: View {
                         .fill(
                             RadialGradient(
                                 gradient: Gradient(colors: [
-                                    currentPhase.color.opacity(0.25),
+                                    theme.glowColor1.opacity(0.25),
                                     Color.clear
                                 ]),
                                 center: .center,
@@ -350,7 +357,7 @@ struct BreathingAnimationSnapshot: View {
                     // Moving glowing circle
                     ZStack {
                         Circle()
-                            .fill(currentPhase.color.opacity(0.3))
+                            .fill(theme.glowColor1.opacity(0.3))
                             .blur(radius: blurRadius)
                             .frame(width: movingCircleSize, height: movingCircleSize)
                             .offset(x: movingCircleOffset)
@@ -359,7 +366,7 @@ struct BreathingAnimationSnapshot: View {
                         Circle()
                             .fill(.white)
                             .frame(width: movingCircleSmallSize, height: movingCircleSmallSize)
-                            .shadow(color: currentPhase.color.opacity(0.8), radius: blurRadius)
+                            .shadow(color: theme.glowColor1.opacity(0.8), radius: blurRadius)
                             .offset(x: movingCircleOffset)
                             .rotationEffect(.degrees(rotation))
                     }
@@ -400,7 +407,7 @@ struct BreathingAnimationSnapshot: View {
                     Text(currentPhase.text)
                         .font(.system(size: fontSize, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white)
-                        .shadow(color: currentPhase.color.opacity(0.7), radius: 10 * scale)
+                        .shadow(color: theme.glowColor1.opacity(0.7), radius: 10 * scale)
                 }
                 
                 Spacer()

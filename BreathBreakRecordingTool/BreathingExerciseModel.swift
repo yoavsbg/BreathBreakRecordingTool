@@ -1,5 +1,121 @@
 import SwiftUI
 
+// MARK: - Theme Model
+struct BreathingTheme: Identifiable, Hashable {
+    let id: UUID
+    let name: String
+    let backgroundGradientStart: Color
+    let backgroundGradientEnd: Color
+    let glowColor1: Color
+    let glowColor2: Color
+    let mood: String
+    
+    init(id: UUID = UUID(), name: String, backgroundGradientStart: Color, backgroundGradientEnd: Color, glowColor1: Color, glowColor2: Color, mood: String) {
+        self.id = id
+        self.name = name
+        self.backgroundGradientStart = backgroundGradientStart
+        self.backgroundGradientEnd = backgroundGradientEnd
+        self.glowColor1 = glowColor1
+        self.glowColor2 = glowColor2
+        self.mood = mood
+    }
+    
+    static let defaultThemes: [BreathingTheme] = [
+        BreathingTheme(
+            name: "Cosmic Calm",
+            backgroundGradientStart: Color(hex: "11002B"),
+            backgroundGradientEnd: Color(hex: "090C2B"),
+            glowColor1: Color(hex: "5C9DFF"),
+            glowColor2: Color(hex: "B094FF"),
+            mood: "Futuristic + relaxing"
+        ),
+        BreathingTheme(
+            name: "Sunset Serenity",
+            backgroundGradientStart: Color(hex: "4B0082"),
+            backgroundGradientEnd: Color(hex: "FF6B6B"),
+            glowColor1: Color(hex: "FFD3B6"),
+            glowColor2: Color(hex: "FF8FA3"),
+            mood: "Warm, emotional, viral aesthetic"
+        ),
+        BreathingTheme(
+            name: "Aqua Dream",
+            backgroundGradientStart: Color(hex: "002B36"),
+            backgroundGradientEnd: Color(hex: "0A9396"),
+            glowColor1: Color(hex: "94D2BD"),
+            glowColor2: Color(hex: "E9D8A6"),
+            mood: "Ocean calm, balanced energy"
+        ),
+        BreathingTheme(
+            name: "Midnight Glow",
+            backgroundGradientStart: Color(hex: "0D0D0D"),
+            backgroundGradientEnd: Color(hex: "1B2735"),
+            glowColor1: Color(hex: "00FFFF"),
+            glowColor2: Color(hex: "9B5DE5"),
+            mood: "Premium tech feel"
+        ),
+        BreathingTheme(
+            name: "Golden Hour",
+            backgroundGradientStart: Color(hex: "331A00"),
+            backgroundGradientEnd: Color(hex: "734B02"),
+            glowColor1: Color(hex: "FFD700"),
+            glowColor2: Color(hex: "FFB347"),
+            mood: "Warm, luxury calm vibe"
+        ),
+        BreathingTheme(
+            name: "Sakura Mist",
+            backgroundGradientStart: Color(hex: "2B1D36"),
+            backgroundGradientEnd: Color(hex: "6D3B57"),
+            glowColor1: Color(hex: "FF9ECD"),
+            glowColor2: Color(hex: "B57EDC"),
+            mood: "Gentle, peaceful, aesthetic"
+        ),
+        BreathingTheme(
+            name: "Forest Depths",
+            backgroundGradientStart: Color(hex: "0B1A0D"),
+            backgroundGradientEnd: Color(hex: "1B3A1F"),
+            glowColor1: Color(hex: "7FFF00"),
+            glowColor2: Color(hex: "90EE90"),
+            mood: "Natural, grounding energy"
+        ),
+        BreathingTheme(
+            name: "Arctic Aurora",
+            backgroundGradientStart: Color(hex: "001F3F"),
+            backgroundGradientEnd: Color(hex: "003D5C"),
+            glowColor1: Color(hex: "00FFD1"),
+            glowColor2: Color(hex: "A8E6CF"),
+            mood: "Cool, refreshing clarity"
+        )
+    ]
+}
+
+// MARK: - Color Extension for Hex
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 0, 0, 0)
+        }
+        
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue:  Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+}
+
 struct BreathingExercise: Identifiable, Codable, Hashable {
     let id: UUID
     let name: String
