@@ -28,7 +28,7 @@ class AnimationRecorder {
         let fileName = "BreathingAnimation_\(exercise.name.replacingOccurrences(of: " ", with: "_"))_\(timestamp).mov"
         let outputURL = tempDir.appendingPathComponent(fileName)
         
-        log("ðŸ“‚ Saving to temp: \(outputURL.path)", type: .info)
+        log("Ã°Å¸â€œâ€š Saving to temp: \(outputURL.path)", type: .info)
         
         // Remove existing file if it exists
         try? FileManager.default.removeItem(at: outputURL)
@@ -54,14 +54,14 @@ class AnimationRecorder {
     ) {
         // Setup video writer
         guard let videoWriter = try? AVAssetWriter(outputURL: outputURL, fileType: .mov) else {
-            log("âŒ Failed to create AVAssetWriter", type: .error)
+            log("Ã¢ÂÅ’ Failed to create AVAssetWriter", type: .error)
             log("Output URL: \(outputURL.path)", type: .error)
             completion(false, nil)
             return
         }
         
-        log("âœ… AVAssetWriter created successfully", type: .success)
-        log("ðŸŽ¬ Output: \(outputURL.lastPathComponent)", type: .info)
+        log("Ã¢Å“â€¦ AVAssetWriter created successfully", type: .success)
+        log("Ã°Å¸Å½Â¬ Output: \(outputURL.lastPathComponent)", type: .info)
         
         let videoSettings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
@@ -92,15 +92,15 @@ class AnimationRecorder {
         let frameDuration = CMTime(value: 1, timescale: CMTimeScale(fps))
         let totalFrames = Int(duration * Double(fps))
         
-        log("ðŸŽ¬ Starting video writing session...", type: .info)
-        log("   Resolution: \(Int(size.width))Ã—\(Int(size.height))", type: .info)
+        log("Ã°Å¸Å½Â¬ Starting video writing session...", type: .info)
+        log("   Resolution: \(Int(size.width))Ãƒâ€”\(Int(size.height))", type: .info)
         log("   Duration: \(duration) seconds", type: .info)
         log("   FPS: \(fps)", type: .info)
         log("   Total frames: \(totalFrames)", type: .info)
         
         // Start writing
         guard videoWriter.startWriting() else {
-            log("âŒ Failed to start writing", type: .error)
+            log("Ã¢ÂÅ’ Failed to start writing", type: .error)
             if let error = videoWriter.error {
                 log("   Error: \(error.localizedDescription)", type: .error)
             }
@@ -109,7 +109,7 @@ class AnimationRecorder {
             return
         }
         
-        log("âœ… Writing started successfully", type: .success)
+        log("Ã¢Å“â€¦ Writing started successfully", type: .success)
         
         videoWriter.startSession(atSourceTime: .zero)
         
@@ -150,10 +150,10 @@ class AnimationRecorder {
             videoWriter.finishWriting {
                 DispatchQueue.main.async {
                     if videoWriter.status == .completed {
-                        self.log("âœ… Video recording completed successfully!", type: .success)
+                        self.log("Ã¢Å“â€¦ Video recording completed successfully!", type: .success)
                         completion(true, outputURL)
                     } else {
-                        self.log("âŒ Video recording failed with status: \(videoWriter.status.rawValue)", type: .error)
+                        self.log("Ã¢ÂÅ’ Video recording failed with status: \(videoWriter.status.rawValue)", type: .error)
                         if let error = videoWriter.error {
                             self.log("Error: \(error.localizedDescription)", type: .error)
                         }
@@ -285,11 +285,11 @@ struct BreathingAnimationSnapshot: View {
             }
         }
         
-        var color: Color {
+        func color(for theme: BreathingTheme) -> Color {
             switch self {
-            case .inhale: return .blue
-            case .hold: return .purple
-            case .exhale: return .green
+            case .inhale: return theme.glowColor1
+            case .hold: return theme.glowColor2
+            case .exhale: return theme.glowColor2.opacity(0.7)
             }
         }
     }
@@ -383,19 +383,19 @@ struct BreathingAnimationSnapshot: View {
                         
                         Group {
                             Circle()
-                                .fill(currentPhase == .inhale ? BreathingPhase.inhale.color : Color.white.opacity(0.15))
+                                .fill(currentPhase == .inhale ? BreathingPhase.inhale.color(for: theme) : Color.white.opacity(0.15))
                                 .frame(width: indicatorSize, height: indicatorSize)
                                 .offset(x: radius)
                                 .rotationEffect(.degrees(inhaleStartAngle))
                             
                             Circle()
-                                .fill(currentPhase == .hold ? BreathingPhase.hold.color : Color.white.opacity(0.15))
+                                .fill(currentPhase == .hold ? BreathingPhase.hold.color(for: theme) : Color.white.opacity(0.15))
                                 .frame(width: indicatorSize, height: indicatorSize)
                                 .offset(x: radius)
                                 .rotationEffect(.degrees(holdStartAngle))
                             
                             Circle()
-                                .fill(currentPhase == .exhale ? BreathingPhase.exhale.color : Color.white.opacity(0.15))
+                                .fill(currentPhase == .exhale ? BreathingPhase.exhale.color(for: theme) : Color.white.opacity(0.15))
                                 .frame(width: indicatorSize, height: indicatorSize)
                                 .offset(x: radius)
                                 .rotationEffect(.degrees(exhaleStartAngle))

@@ -26,11 +26,11 @@ struct BreathingAnimationPreview: View {
         case hold = "Hold"
         case exhale = "Exhale"
         
-        var color: Color {
+        func color(for theme: BreathingTheme) -> Color {
             switch self {
-            case .inhale: return Color.blue
-            case .hold: return Color.purple
-            case .exhale: return Color.green
+            case .inhale: return theme.glowColor1
+            case .hold: return theme.glowColor2
+            case .exhale: return theme.glowColor2.opacity(0.7)
             }
         }
     }
@@ -173,19 +173,19 @@ struct BreathingAnimationPreview: View {
                             
                             Group {
                                 Circle()
-                                    .fill(phase == .inhale ? BreathingPhase.inhale.color : Color.white.opacity(0.15))
+                                    .fill(phase == .inhale ? BreathingPhase.inhale.color(for: theme) : Color.white.opacity(0.15))
                                     .frame(width: indicatorSize, height: indicatorSize)
                                     .offset(x: radius)
                                     .rotationEffect(.degrees(inhaleStartAngle))
                                 
                                 Circle()
-                                    .fill(phase == .hold ? BreathingPhase.hold.color : Color.white.opacity(0.15))
+                                    .fill(phase == .hold ? BreathingPhase.hold.color(for: theme) : Color.white.opacity(0.15))
                                     .frame(width: indicatorSize, height: indicatorSize)
                                     .offset(x: radius)
                                     .rotationEffect(.degrees(holdStartAngle))
                                 
                                 Circle()
-                                    .fill(phase == .exhale ? BreathingPhase.exhale.color : Color.white.opacity(0.15))
+                                    .fill(phase == .exhale ? BreathingPhase.exhale.color(for: theme) : Color.white.opacity(0.15))
                                     .frame(width: indicatorSize, height: indicatorSize)
                                     .offset(x: radius)
                                     .rotationEffect(.degrees(exhaleStartAngle))
